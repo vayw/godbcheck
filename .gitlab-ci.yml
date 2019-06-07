@@ -1,0 +1,29 @@
+image: golang:latest
+variables:
+  GOBIN: /go/bin
+stages:
+  - build
+  - tools_update
+
+build:
+  stage: build
+  only:
+    refs:
+      - master
+  script:
+    - go get -u github.com/golang/dep/cmd/dep
+    - ln -s ${PWD} /go/src/ && cd /go/src/godbcheck/
+    - dep ensure
+    - make build
+    - checksum=$(md5sum godbcheck | awk '{print $1}')
+    - curl -H "X-Checksum-MD5:$checksum" -H "X-JFrog-Art-Api:$SDO_ARTIFACTORY_TOKEN" -T godbcheck "https://artifactory.wgdp.io/sdo/godbcheck"
+
+trigger_sdo_tools_build:
+  stage: tools_update
+  only:
+    refs:
+      - master
+  script:
+    - "curl -k -X POST -F token=$SDO_TOOLS_TOKEN -F ref=master https://gitlab.ix/api/v4/projects/197/trigger/pipeline"
+  when:
+    on_success
