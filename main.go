@@ -45,7 +45,7 @@ func main() {
 		} else {
 			mport = *port
 		}
-		connStr := fmt.Sprintf("%s:%s@%s:%d/%s", *user, *password, *host, mport, *name)
+		connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", *user, *password, *host, mport, *name)
 		DB, Err = sql.Open("mysql", connStr)
 	case "postgresql":
 		var mport int
@@ -54,16 +54,18 @@ func main() {
 		} else {
 			mport = *port
 		}
-		connStr := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", *user, *password, *host, mport, *name)
+		connStr := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", *user, *password, *host, mport, *name)
 		DB, Err = sql.Open("postgres", connStr)
 	}
 	if Err != nil {
+		fmt.Println(Err)
 		fail()
 	}
 	defer DB.Close()
 
 	Err = DB.Ping()
 	if Err != nil {
+		fmt.Println(Err)
 		fail()
 	}
 	fmt.Println(1)
